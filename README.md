@@ -2,11 +2,11 @@
 
 Many people use a tennis ball on a string to precisely locate their car in their garage. I say "Who are we!? We can do better!". Bumper to Bumper is an LED matrix display and LIDAR for showing wall-to-bumper distance with icons to show the best parking spot so you don't bang your garage door on your bumper.
 
-![front panel](front.jpg|width=640)
+![front](front.jpg)
 
-![back panel](back.jpg|width=640)
+![back](back.jpg)
 
-![block diagram](block-diagram.png|width=800)
+![diagram](block-diagram.png)
 
 ## Getting Started
 
