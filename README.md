@@ -14,9 +14,11 @@ This is an Arduino project (source code included). I ran it on an Arduino MEGA 2
 
 ### Prerequisites
 
-https://learn.sparkfun.com/tutorials/tfmini---micro-lidar-module-hookup-guide/all
-https://www.led-card.com/p7-62-rg-matrix-led-display-module.html
-https://www.amazon.com/ARDUINO-MEGA-2560-REV3-A000067/dp/B0046AMGW0
+* https://learn.sparkfun.com/tutorials/tfmini---micro-lidar-module-hookup-guide/all
+
+* https://www.led-card.com/p7-62-rg-matrix-led-display-module.html
+
+* https://www.amazon.com/ARDUINO-MEGA-2560-REV3-A000067/dp/B0046AMGW0
 
 
 ### Notes

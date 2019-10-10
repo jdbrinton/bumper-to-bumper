@@ -1,9 +1,7 @@
-#include <SoftwareSerial.h>
 #include "inc/tfmini.h"
 #include "inc/graphics.h"
 #include "inc/pin_assignments.h"
 
-SoftwareSerial mySerial(19, 18);      // Uno RX (TFMINI TX), Uno TX (TFMINI RX)
 TFMini tfmini;
 
 #define INTERVAL 100 // units of milliseconds
@@ -29,9 +27,10 @@ uint16_t dist_last = 0;
 
 bool color;
 
+uint8_t frame_buf[256] = {0};
+
+
 void setup() {
-  randomSeed(analogRead(0));
-  
   pinMode(GND1, OUTPUT);
   pinMode(GND2, OUTPUT);
   pinMode(GND3, OUTPUT);
@@ -120,9 +119,6 @@ void drawFrame(const uint8_t buf[], bool color)
   }
 }
 
-
-
-uint8_t frame_buf[256] = {0};
 
 void assembleFrame(uint8_t* buf, FRAME_HALF buf1, FRAME_QUARTER buf2, FRAME_QUARTER buf3)
 {
