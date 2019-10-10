@@ -6,6 +6,29 @@
 SoftwareSerial mySerial(19, 18);      // Uno RX (TFMINI TX), Uno TX (TFMINI RX)
 TFMini tfmini;
 
+#define INTERVAL 100 // units of milliseconds
+#define TIMEOUT 100 // units of intervals
+
+#define PERFECT_DISTANCE 120 // units of centimeters
+#define FAR_DISTANCE 170 // units of centimeters
+#define OFF_DISTANCE 350 // units of centimeters
+
+enum STATE
+{
+  STATE_OFF,
+  STATE_STOP,
+  STATE_GOOD,
+  STATE_BAR,
+} state;
+
+uint16_t dist = 0;
+uint16_t dist_last = 0;
+
+#define COLOR_RED 1
+#define COLOR_GREEN 0
+
+bool color;
+
 void setup() {
   randomSeed(analogRead(0));
   
@@ -97,20 +120,7 @@ void drawFrame(const uint8_t buf[], bool color)
   }
 }
 
-enum STATE
-{
-  STATE_OFF,
-  STATE_STOP,
-  STATE_GOOD,
-  STATE_BAR,
-} state;
 
-uint16_t dist = 0;
-
-#define COLOR_RED 1
-#define COLOR_GREEN 0
-
-bool color;
 
 uint8_t frame_buf[256] = {0};
 
@@ -155,11 +165,6 @@ const uint8_t *const numbers[11] =
   blank_quarter_map
 };
 
-
-#define PERFECT_DISTANCE 120
-#define FAR_DISTANCE 170
-#define OFF_DISTANCE 350
-
 const uint8_t *const bars[6] =
 {
   bar0_map,
@@ -171,34 +176,42 @@ const uint8_t *const bars[6] =
 };
 
 unsigned bar_idx = 0;
+int16_t meas_last = 0;
+unsigned timeout = 0;
 
 void changeState()
 {
-  FRAME_QUARTER* num_left;
-  FRAME_QUARTER* num_right;
-
-  unsigned int_left;
-  unsigned int_right;
+  unsigned idx_left;
+  unsigned idx_right;
   int16_t meas;
 
-  meas = abs(((int16_t)dist) - PERFECT_DISTANCE);
-//  meas &= 0x7FFF;
+  // timeout if measurement hasn't changed in the last TIMEOUT number of INTERVALS
+  if( dist_last == (dist/10) ) {
+    if( timeout > TIMEOUT ) digitalWrite(EN, HIGH); // HIGH is OFF
+    timeout++;
+  }
+  else {
+    digitalWrite(EN, LOW); // LOW is ON
+    timeout = 0;
+  }
+  dist_last = dist / 10;
 
+  // measurement to display on screen
+  meas = abs(((int16_t)dist) - PERFECT_DISTANCE);
   if( meas > 99 ) {
-    int_left = 10;  // the blank symbol
-    int_right = 10; // the blank symbol
+    idx_left = 10;  // the blank symbol
+    idx_right = 10; // the blank symbol
   }
   else if( meas < 0 )
   {
-    int_left = 0;
-    int_right = 0;
+    idx_left = 0;
+    idx_right = 0;
   }
   else {
-    int_left = meas / 10;
-    int_right = meas % 10;
+    idx_left = meas / 10;
+    idx_right = meas % 10;
   }
   
-
   switch(state)
   {
     case STATE_OFF:
@@ -207,20 +220,20 @@ void changeState()
       return;
       
     case STATE_GOOD:
-      assembleFrame(frame_buf, thumb_map, numbers[int_left], numbers[int_right]);
+      assembleFrame(frame_buf, thumb_map, numbers[idx_left], numbers[idx_right]);
       color = COLOR_GREEN;
       if( dist < PERFECT_DISTANCE ) state = STATE_STOP;
       else if( dist > FAR_DISTANCE ) state = STATE_BAR;
       return;
       
     case STATE_STOP:
-      assembleFrame(frame_buf, stop_map, numbers[int_left], numbers[int_right]);
+      assembleFrame(frame_buf, stop_map, numbers[idx_left], numbers[idx_right]);
       color = COLOR_RED;
       if( dist > PERFECT_DISTANCE ) state = STATE_GOOD;
       return;
       
     case STATE_BAR:
-      assembleFrame(frame_buf, bars[(bar_idx++)%6], numbers[int_left], numbers[int_right]);
+      assembleFrame(frame_buf, bars[(bar_idx++)%6], numbers[idx_left], numbers[idx_right]);
       color = COLOR_RED;
       if( dist < FAR_DISTANCE ) {
         state = STATE_GOOD;
@@ -236,7 +249,6 @@ void changeState()
 }
 
 long previousMillis = 0;
-long interval = 100;
 
 void loop() {
   unsigned long currentMillis;
@@ -246,7 +258,7 @@ void loop() {
   
   while(1) {
     currentMillis = millis();
-    if(currentMillis - previousMillis > interval) {
+    if(currentMillis - previousMillis > INTERVAL) {
       previousMillis = currentMillis; 
       changeState();
       
